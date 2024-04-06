@@ -138,6 +138,33 @@ async def edit_room(request: Request,room_id: str, updated_room: Room):
 
     return {"message": "Room updated successfully"}
 
+@app.delete("/rooms/delete/{room_id}")
+async def delete_room(request: Request,room_id: str):
+    uid = request.cookies.get('uid')
+    if not uid:
+        raise HTTPException(status_code=401, detail="User not authenticated")
+
+    # Retrieve the room document from Firestore
+    room_ref = db.collection("rooms").document(room_id)
+    room_doc = room_ref.get()
+
+    # Check if the room exists
+    if not room_doc.exists:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    # Extract room data
+    room_data = room_doc.to_dict()
+
+    # Check if the authenticated user is the creator of the room
+    if room_data["createdBy"] != uid:
+        raise HTTPException(status_code=403, detail="You are not authorized to delete this room")
+
+    # Delete the room document from Firestore
+    room_ref.delete()
+
+    return {"message": "Room deleted successfully"}
+
+
 
 @app.get("/booking",response_class=HTMLResponse)
 async def booking_read_root(request:Request):

@@ -8,80 +8,81 @@
   <title>Document</title>
   <link type="text/css" rel="stylesheet" href="{{ url_for('static', path='style.css') }}" />
   <style>
-     body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
 
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #ddd;
-        }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #ddd;
+    }
 
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #333;
-        }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+    }
 
-        .add-room-button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+    .add-room-button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
 
-        .add-room-button:hover {
-            background-color: #0056b3;
-        }
+    .add-room-button:hover {
+      background-color: #0056b3;
+    }
 
-        .room-table {
-            padding: 20px;
-        }
+    .room-table {
+      padding: 20px;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
+    th,
+    td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
 
-        th {
-            background-color: #f5f5f5;
-        }
+    th {
+      background-color: #f5f5f5;
+    }
 
-        .room-actions button {
-            padding: 8px 12px;
-            margin-right: 5px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+    .room-actions button {
+      padding: 8px 12px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
 
-        .room-actions button:hover {
-            background-color: #ddd;
-        }
+    .room-actions button:hover {
+      background-color: #ddd;
+    }
   </style>
   <script type="module" src="{{ url_for('static', path='firebase-login.js') }}"></script>
 </head>
@@ -126,16 +127,44 @@
               <a href="/rooms/edit/{{room.id}}">
                 <button class="edit-button">Edit</button>
               </a>
-              <button class="delete-button">Delete</button>
+             
+              <button id="delete-button" onclick="deleteRoom('{{room.id}}')">Delete</button>
             </td>
           </tr>
           {% endfor %}
-      </tbody>
-      {% endif %}
+        </tbody>
+        {% endif %}
 
       </table>
     </div>
   </div>
+
+  <script>
+
+
+    function deleteRoom(id) {
+      const apiUrl = `http://127.0.0.1:8000/rooms/delete/${id}`;
+      const requestOptions = {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json"
+        },
+      };
+
+      fetch(apiUrl, requestOptions)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Failed to delete room");
+          }
+          window.location = '/'
+        })
+        .catch(error => {
+          console.error("Error deleteing room:", error);
+        });
+    }
+
+   
+  </script>
   <!-- <div id="login-box" >
       <div>
         <h4>Email</h4>
