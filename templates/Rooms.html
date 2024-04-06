@@ -1,104 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rooms Management</title>
+    <title>Add Room</title>
+    <!-- Add any CSS stylesheets or libraries here -->
     <style>
-        /* Basic styling */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
         }
+
         .container {
-            max-width: 800px;
+            max-width: 600px;
             margin: 20px auto;
-            padding: 20px;
             background-color: #fff;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
         }
-        h1 {
-            margin-top: 0;
+
+        .form-group {
+            margin-bottom: 20px;
         }
-        table {
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        textarea {
             width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
             padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: vertical;
         }
-        th {
-            background-color: #f2f2f2;
-        }
-        .btn-add {
-            float: right;
+
+        button {
+            padding: 10px 20px;
             background-color: #007bff;
             color: #fff;
             border: none;
-            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
-        .btn-add:hover {
+
+        button:hover {
             background-color: #0056b3;
-        }
-        .btn-action {
-            background-color: #28a745;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        .btn-action.edit {
-            background-color: #17a2b8;
-        }
-        .btn-action.delete {
-            background-color: #dc3545;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>Rooms Management</h1>
-        <button class="btn-add" onclick="addRoom()">Add Room</button>
-        <table>
-            <thead>
-                <tr>
-                    <th>Serial Number</th>
-                    <th>Room Name</th>
-                    <th>Description</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Sample row, replace with actual room data from backend -->
-                <tr>
-                    <td>1</td>
-                    <td>Room 1</td>
-                    <td>Description of Room 1</td>
-                    <td>
-                        <button class="btn-action edit">Edit</button>
-                        <button class="btn-action view">View</button>
-                        <button class="btn-action delete">Delete</button>
-                    </td>
-                </tr>
-                <!-- Sample row ends -->
-            </tbody>
-        </table>
+        <h2>Add Room</h2>
+
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" value="{{room_data.title}}"  required>
+                <input type="text" id="id" name="id" hidden value="{{room_data.id}}"  required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="5" required>{{room_data.description}}</textarea>
+            </div>
+            {% if type == 'add' %}
+            <button type="submit" id="add-room">Add Room</button>
+            {% endif %}
+
+            {% if type == 'edit' %}
+            <button type="submit" id="edit-room">Edit Room</button>
+            {% endif %}
+
     </div>
 
     <script>
-        // Function to handle add room button click event (placeholder)
-        function addRoom() {
-            alert("Add Room functionality will be implemented here.");
+        let addRoomButton = document.getElementById('add-room');
+        if(addRoomButton){
+            document.getElementById('add-room').addEventListener('click', () => {
+                let title = document.getElementById('title').value
+                let description = document.getElementById('description').value
+                
+                const apiUrl = "http://127.0.0.1:8000/rooms/";
+                
+                const roomData = {
+                    title: title,
+                    description: description,
+                };
+                
+                const requestOptions = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(roomData)
+                };
+                
+                fetch(apiUrl, requestOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to add room");
+                    }
+                    window.location='/'
+                })
+                .catch(error => {
+                    console.error("Error adding room:", error);
+                });
+            })
         }
+
+        let editRoomButton =  document.getElementById('edit-room');
+        if(editRoomButton){
+            document.getElementById('edit-room').addEventListener('click', () => {
+                let title = document.getElementById('title').value
+                let description = document.getElementById('description').value
+                let id = document.getElementById('id').value
+
+                const apiUrl = `http://127.0.0.1:8000/rooms/edit/${id}`;
+                
+                const roomData = {
+                    title: title,
+                    description: description,
+                };
+                
+                const requestOptions = {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(roomData)
+                };
+                
+                fetch(apiUrl, requestOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to add room");
+                    }
+                    window.location='/'
+                })
+                .catch(error => {
+                    console.error("Error adding room:", error);
+                });
+            })
+        }
+
     </script>
 </body>
+
 </html>
