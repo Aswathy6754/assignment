@@ -79,11 +79,17 @@
             {% if type == 'edit' %}
             <button type="submit" id="edit-room">Edit Room</button>
             {% endif %}
+            <div style="text-align:center;">
+                <span id="error-message" style="color: red;"> </span>
+                <span id="success-message" style="color: green;"> </span>
+            </div>
 
     </div>
 
     <script>
         let addRoomButton = document.getElementById('add-room');
+        let errorMessage = document.getElementById('error-message')
+        let successMessage = document.getElementById('success-message')
         if(addRoomButton){
             document.getElementById('add-room').addEventListener('click', () => {
                 let title = document.getElementById('title').value
@@ -106,19 +112,28 @@
                 
                 fetch(apiUrl, requestOptions)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Failed to add room");
-                    }
+                    // console.log(response)
+                    // if (!response.ok) {
+                    //     throw new Error(response.body.getReader);
+                    // }
                     window.location='/'
+                    return response.json()
+                }).then(json=>{
+                    console.log(json)
+                    throw new Error(json.detail);
+
                 })
                 .catch(error => {
-                    console.error("Error adding room:", error);
+                    console.log(error)
+                    successMessage.innerText=""
                 });
             })
         }
 
         let editRoomButton =  document.getElementById('edit-room');
         if(editRoomButton){
+            errorMessage.innerText = ""
+            successMessage.innerText=""
             document.getElementById('edit-room').addEventListener('click', () => {
                 let title = document.getElementById('title').value
                 let description = document.getElementById('description').value
@@ -142,12 +157,17 @@
                 fetch(apiUrl, requestOptions)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error("Failed to add room");
+                        throw new Error(response.detail);
                     }
+                    errorMessage.innerText = ""
+                    successMessage.innerText=response.text
                     window.location='/'
                 })
                 .catch(error => {
-                    console.error("Error adding room:", error);
+                    console.error("Error adding room:",     );
+                    errorMessage.innerText = error.detail
+
+                    successMessage.innerText=""
                 });
             })
         }

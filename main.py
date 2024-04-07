@@ -72,7 +72,7 @@ async def read_root(request:Request):
         room_with_id = {"id": room_id, **room_data}
         rooms_with_id.append(room_with_id)
 
-    bookings_ref = db.collection("bookings").stream()
+    bookings_ref = db.collection("bookings").where("createdBy", "==", uid).stream()
         
         # Initialize a list to store booking data along with their IDs
     all_bookings = []
