@@ -83,6 +83,21 @@
     .room-actions button:hover {
       background-color: #ddd;
     }
+
+    .card {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+            width: 300px;
+            margin: 20px;
+            display: inline-block;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        }
   </style>
   <script type="module" src="{{ url_for('static', path='firebase-login.js') }}"></script>
 </head>
@@ -137,6 +152,30 @@
 
       </table>
     </div>
+  </div>
+  <h1>Booking Management</h1>
+
+  <!-- Example bookings (replace with dynamic data from backend) -->
+  <div class="card">
+      <div class="">
+          <h4><b>Booking ID: 123</b></h4>
+          <p>Date: 2024-04-05</p>
+          <p>Start Time: 10:00 AM</p>
+          <p>End Time: 12:00 PM</p>
+          <p>Room: Room A</p>
+          <!-- Add additional booking details as needed -->
+      </div>
+  </div>
+
+  <div class="card">
+      <div class="">
+          <h4><b>Booking ID: 124</b></h4>
+          <p>Date: 2024-04-06</p>
+          <p>Start Time: 11:00 AM</p>
+          <p>End Time: 1:00 PM</p>
+          <p>Room: Room B</p>
+          <!-- Add additional booking details as needed -->
+      </div>
   </div>
 
   <script>

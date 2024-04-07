@@ -8,6 +8,8 @@ from google.auth.transport import requests
 import firebase_admin
 from firebase_admin import credentials, firestore
 from pydantic import BaseModel
+from datetime import datetime
+from typing import Any, List,Dict
 
 app = FastAPI()
  
@@ -86,6 +88,7 @@ async def add_room(room: Room,request:Request):
     room_data = room.dict()
     room_data["createdBy"] = uid
     room_data["createdByEmail"] = createdByEmail
+    room_data['days']=[]
     rooms_ref.add(room_data)
     return {"message": "Room added successfully"}
 
@@ -165,8 +168,155 @@ async def delete_room(request: Request,room_id: str):
     return {"message": "Room deleted successfully"}
 
 
-
 @app.get("/booking",response_class=HTMLResponse)
 async def booking_read_root(request:Request):
-    return templates.TemplateResponse('booking.html',{'request' : request,})   
+    uid =request.cookies.get('uid')
+    rooms_ref = db.collection("rooms")
+    query = rooms_ref.where("createdBy", "==", uid)
+    query_result = query.get()
+    rooms_with_id = []
+    for doc in query_result:
+        room_id = doc.id
+        room_data = doc.to_dict()
+        room_with_id = {"id": room_id, **room_data}
+        rooms_with_id.append(room_with_id)
+    return templates.TemplateResponse('booking.html',{'request' : request,"rooms":rooms_with_id})   
 
+# Data model for booking
+class Booking(BaseModel):
+    room: str
+    date: str
+    time_from: str
+    time_to: str
+
+
+def validate_room(room_id: str) -> bool:
+    room_ref = db.collection("rooms").document(room_id)
+    return room_ref.get().exists
+
+def create_booking_document(room: str, date: str, time_from: str, time_to: str) -> str:
+    booking_data = {
+        "room": room,
+        "date": date,
+        "time_from": time_from,
+        "time_to": time_to
+    }
+    booking_ref = db.collection("bookings").add(booking_data)
+    return booking_ref[1].id
+
+def update_room_days(room_id: str, date_id: str,) -> None:
+    room_ref = db.collection("rooms").document(room_id)
+    room_ref.update({"days": firestore.ArrayUnion([date_id])})
+
+def find_element_by_date(array: List[dict], date: Any) -> dict:
+    try:
+        for item in array:
+            if item.get("day") == date:
+                return item
+        return None
+    except Exception as e:
+        raise e
+
+
+def is_booking_overlapping(bookings: List[Dict[str, str]], new_time_from: str, new_time_to: str) -> bool:
+  
+    try:
+        # Convert time strings to datetime objects for comparison
+        new_start_time = datetime.strptime(new_time_from, "%H:%M")
+        new_end_time = datetime.strptime(new_time_to, "%H:%M")
+
+        for booking in bookings:
+            # Convert existing booking times to datetime objects
+            existing_start_time = datetime.strptime(booking["time_from"], "%H:%M")
+            existing_end_time = datetime.strptime(booking["time_to"], "%H:%M")
+
+            # Check for overlap
+            if (new_start_time < existing_end_time and new_end_time > existing_start_time):
+                return True  # Overlap detected
+
+        return False  # No overlap detected
+    except Exception as e:
+        raise e
+
+@app.post("/bookings/add")
+async def add_booking(booking:Booking):
+    try:
+        # Check if room exists
+        if not validate_room(booking.room):
+            raise HTTPException(status_code=404, detail="Room not found")
+
+        room_ref = db.collection("rooms").document(booking.room)
+        room_data = room_ref.get().to_dict()
+        if not room_data["days"]:
+                booking_id = create_booking_document(booking.room, booking.date, booking.time_from, booking.time_to)
+                day_data = {
+                    "day": booking.date,
+                    "bookings": [booking_id]
+                }
+                day_ref = db.collection("days").add(day_data)
+                date_id = day_ref[1].id
+                update_room_days(booking.room, date_id)
+                return {"message": "Booking added successfully"}
+        
+        else:
+            days_query = db.collection("days").where(f"__name__", "in", room_data["days"])
+            days_docs = days_query.stream()
+            documents = []
+            for doc in days_docs:
+                elem =doc.to_dict()
+                elem['id']=doc.id
+                documents.append((elem))
+
+            matching_date_elements = find_element_by_date(documents,booking.date)
+            match_date_id = matching_date_elements['id']
+            if matching_date_elements:
+                if not matching_date_elements["bookings"]:
+                    booking_id = create_booking_document(booking.room, booking.date, booking.time_from, booking.time_to)
+                    day_data = {
+                            "day": booking.date,
+                            "bookings": [booking_id]
+                    }
+                    day_ref = db.collection("days").add(day_data)
+                    date_id = day_ref[1].id
+
+                    update_room_days(booking.room, date_id)
+                    return {"message": "Booking added successfully"}
+
+                else:
+                    days_query = db.collection("bookings").where(f"__name__", "in", matching_date_elements["bookings"])
+                    days_docs = days_query.stream()
+                    booking_documents = []
+                    for doc in days_docs:
+                        booking_documents.append(doc.to_dict())
+
+                    check_over_lapping = is_booking_overlapping(booking_documents,booking.time_from , booking.time_to)
+
+                    if check_over_lapping:
+                        raise HTTPException(status_code=400, detail="Already booked the room in the same time")
+                    
+                    else:
+                        booking_id = create_booking_document(booking.room, booking.date, booking.time_from, booking.time_to)
+                        day_ref = db.collection("days").document(match_date_id)
+                        # Atomically update the booking array by appending the new booking ID
+                        day_ref.update({
+                            "bookings": firestore.ArrayUnion([booking_id])
+                        })
+                        print('date updated')
+  
+            else:
+                booking_id = create_booking_document(booking.room, booking.date, booking.time_from, booking.time_to)
+                day_data = {
+                    "day": booking.date,
+                    "bookings": [booking_id]
+                }
+                day_ref = db.collection("days").add(day_data)
+                date_id = day_ref[1].id
+                update_room_days(booking.room, date_id)
+                return {"message": "Booking added successfully"}
+
+
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

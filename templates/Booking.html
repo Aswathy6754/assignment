@@ -1,13 +1,153 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Add Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            max-width: 400px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form {
+            display: grid;
+            grid-gap: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="date"],
+        input[type="time"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>name : {{ name }}</h1>
-    <h1>number : {{ number }}</h1>
+    <div class="card">
+        <h1>Add Booking</h1>
+            <label for="room_id">Room:</label>
+            <select id="room" name="room_id" required>
+                {% for room in rooms %}
+                <option value="{{ room.id }}">{{ room.title }}</option>
+                {% endfor %}
+            </select>
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+            <label for="time_from">Time From:</label>
+            <input type="time" id="time_from" name="time_from" required>
+            <label for="time_to">Time To:</label>
+            <input type="time" id="time_to" name="time_to" required>
+            <button type="submit " id="add-booking">Add Booking</button>
+    </div>
+
+    <script>
+        // Get today's date in the format yyyy-mm-dd
+        var today = new Date().toISOString().split('T')[0];
+        
+        // Set the min attribute of the date input field
+        document.getElementById('date').setAttribute('min', today);
+
+        // Function to ensure end time is greater than start time
+        document.getElementById('time_from').addEventListener('input', function() {
+            var startTime = document.getElementById('time_from').value;
+            var endTime = document.getElementById('time_to').value;
+            if (endTime && startTime > endTime) {
+                document.getElementById('time_to').value = startTime;
+            }
+        });
+
+        document.getElementById('time_to').addEventListener('input', function() {
+            var startTime = document.getElementById('time_from').value;
+            var endTime = document.getElementById('time_to').value;
+            if (startTime && endTime < startTime) {
+                document.getElementById('time_from').value = endTime;
+            }
+        });
+
+        let addBookingButton = document.getElementById('add-booking');
+        if(addBookingButton){
+            document.getElementById('add-booking').addEventListener('click', () => {
+                let room = document.getElementById('room').value
+                let date = document.getElementById('date').value
+                let time_from = document.getElementById('time_from').value
+                let time_to = document.getElementById('time_to').value
+                
+                const apiUrl = "http://127.0.0.1:8000/bookings/add";
+                
+                const roomData = {
+                    room,
+                    date,
+                    time_from,
+                    time_to
+                };
+                
+                const requestOptions = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(roomData)
+                };
+                
+                fetch(apiUrl, requestOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to add room");
+                    }
+                    // window.location='/'
+                })
+                .catch(error => {
+                    console.error("Error adding room:", error);
+                });
+            })
+        }
+    </script>
 </body>
 </html>
