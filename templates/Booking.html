@@ -71,20 +71,31 @@
 </head>
 <body>
     <div class="card">
+        {% if type == 'add' %}
         <h1>Add Booking</h1>
+        {% endif %}
+        {% if type == 'edit' %}
+        <h1>Edit Booking</h1>
+        {% endif %}
             <label for="room_id">Room:</label>
-            <select id="room" name="room_id" required>
+            <select id="room" name="room_id" value="{{booking_data.room}}" required>
+                <option value="">Select Room</option>
                 {% for room in rooms %}
                 <option value="{{ room.id }}">{{ room.title }}</option>
                 {% endfor %}
             </select>
             <label for="date">Date:</label>
-            <input type="date" id="date" name="date" required>
+            <input type="date" id="date" name="date"  value="{{booking_data.date}}" required>
             <label for="time_from">Time From:</label>
-            <input type="time" id="time_from" name="time_from" required>
+            <input type="time" id="time_from" name="time_from" value="{{booking_data.time_from}}" required>
             <label for="time_to">Time To:</label>
-            <input type="time" id="time_to" name="time_to" required>
+            <input type="time" id="time_to" name="time_to" value="{{booking_data.time_to}}" required>
+            {% if type == 'add' %}
             <button type="submit " id="add-booking">Add Booking</button>
+            {% endif %}
+            {% if type == 'edit' %}
+            <button type="submit " id="edit-booking">Edit Booking</button>
+            {% endif %}
     </div>
 
     <script>
@@ -141,7 +152,48 @@
                     if (!response.ok) {
                         throw new Error("Failed to add room");
                     }
-                    // window.location='/'
+                    window.location='/'
+                })
+                .catch(error => {
+                    console.error("Error adding room:", error);
+                });
+            })
+        }
+
+        const currentUrl = window.location.href;
+        const id = currentUrl.split('/').at(-1)
+        let editBookingButton = document.getElementById('edit-booking');
+        if(editBookingButton){
+            document.getElementById('edit-booking').addEventListener('click', () => {
+                let room = document.getElementById('room').value
+                let date = document.getElementById('date').value
+                let time_from = document.getElementById('time_from').value
+                let time_to = document.getElementById('time_to').value
+                const currentUrl = window.location.href;
+
+                const apiUrl = `http://127.0.0.1:8000/bookings/edit/${id}`;
+                
+                const roomData = {
+                    room,
+                    date,
+                    time_from,
+                    time_to
+                };
+                
+                const requestOptions = {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(roomData)
+                };
+                
+                fetch(apiUrl, requestOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to add room");
+                    }
+                     window.location='/'
                 })
                 .catch(error => {
                     console.error("Error adding room:", error);

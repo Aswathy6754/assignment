@@ -16,7 +16,7 @@
     }
 
     .container {
-      max-width: 800px;
+      max-width: 1200px;
       margin: 20px auto;
       background-color: #fff;
       border-radius: 5px;
@@ -153,30 +153,44 @@
       </table>
     </div>
   </div>
-  <h1>Booking Management</h1>
+  <div class="container">
+    <div class="header">
+      <h1>Booking Management</h1>
+      <a href="/booking">
+        <button class="add-room-button">Add Booking</button>
+      </a>
+    </div>
+    <div class="room-table">
+      {% if all_bookings|length > 0 %}
+      <div>
+        {% for booking in all_bookings %}
+        <div class="card">
+          <div class="">
+              <h4><b>Booking ID:  {{booking.id}}</b></h4>
+              <p>Date: {{booking.date}}</p>
+              <p>Start Time: {{booking.time_from}}</p>
+              <p>End Time: {{booking.time_to}}</p>
+              <p>Room:{{booking.room_details.title}}</p>
+              <!-- Add additional booking details as needed -->
+              <div>
+                <a href="/bookings/edit/{{booking.id}}">
+                  <button class="edit-button">Edit</button>
+                </a>
+               
+                <button id="delete-button" onclick="deleteBooking('{{booking.id}}')">Delete</button>
+              </div>
+          </div>
+      </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  
 
   <!-- Example bookings (replace with dynamic data from backend) -->
-  <div class="card">
-      <div class="">
-          <h4><b>Booking ID: 123</b></h4>
-          <p>Date: 2024-04-05</p>
-          <p>Start Time: 10:00 AM</p>
-          <p>End Time: 12:00 PM</p>
-          <p>Room: Room A</p>
-          <!-- Add additional booking details as needed -->
-      </div>
-  </div>
-
-  <div class="card">
-      <div class="">
-          <h4><b>Booking ID: 124</b></h4>
-          <p>Date: 2024-04-06</p>
-          <p>Start Time: 11:00 AM</p>
-          <p>End Time: 1:00 PM</p>
-          <p>Room: Room B</p>
-          <!-- Add additional booking details as needed -->
-      </div>
-  </div>
+  
 
   <script>
 
@@ -202,29 +216,29 @@
         });
     }
 
-   
+    function deleteBooking(id) {
+      const apiUrl = `http://127.0.0.1:8000/bookings/${id}`;
+      const requestOptions = {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json"
+        },
+      };
+
+      fetch(apiUrl, requestOptions)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Failed to delete room");
+          }
+          window.location = '/'
+        })
+        .catch(error => {
+          console.error("Error deleteing room:", error);
+        });
+    }
+
   </script>
-  <!-- <div id="login-box" >
-      <div>
-        <h4>Email</h4>
-        <input id="email" type="email" />
-      </div>
-      <div>
-        <h4>password</h4>
-        <input type="password" id="password" />
-        <button id="login">Login</button>
-        <button id="sign-up">Sigh up</button>
-        <button id="sign-out">Log Out</button>
-
-      </div>
-    </div>
-
-    <div>
-      {% if user_token %}
-      <p>user email : {{user_token.emil}}</p>
-      <p>error messge : {{error_message}}</p>
-      {% endif %}
-    </div> -->
+ 
 </body>
 
 </html>
