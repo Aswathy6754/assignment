@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI, Request,HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse,Response
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import google.oauth2.id_token
@@ -26,18 +27,38 @@ templates = Jinja2Templates(directory='templates')
 
 @app.get("/signup",response_class=HTMLResponse)
 async def signup_read_root(request:Request):
+    id_token = request.cookies.get('token')
+
+    if id_token:
+        return RedirectResponse(url="/")
     return templates.TemplateResponse('signup.html',{'request' : request,})
 
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
+    id_token = request.cookies.get('token')
+
+    if id_token:
+        return RedirectResponse(url="/")
     return templates.TemplateResponse('login.html',{'request' : request,})
 
+@app.get("/logout")
+async def logout(response: Response):
+    response.delete_cookie("token")
+    response.delete_cookie("uid")
+    response.delete_cookie("email")
+
+    response = RedirectResponse(url="/login")
+    return response
 
 @app.get("/",response_class=HTMLResponse)
 async def read_root(request:Request): 
 
     id_token = request.cookies.get('token')
+
+    if not id_token:
+        return RedirectResponse(url="/login")
+
     uid = request.cookies.get('uid')
     error_message = 'No Error Here'
     user_token = None
@@ -72,7 +93,6 @@ async def read_root(request:Request):
         booking['room_details'] =  room_ref.get().to_dict()
         all_bookings_with_room.append(booking)
 
-    print(all_bookings_with_room)
     if id_token:
         try:
             user_token =google.oauth2.id_token.verify_firebase_token(id_token,firebase_request_adapter)
@@ -116,12 +136,20 @@ async def add_room(room: Room,request:Request):
 
 @app.get("/rooms",response_class=HTMLResponse)
 async def rooms_read_root(request:Request):
+    id_token = request.cookies.get('token')
+
+    if not id_token:
+        return RedirectResponse(url="/login")
     return templates.TemplateResponse('rooms.html',{'request' : request, "type":"add", 'room_data':{"title":"","description":"","id":""}})       
    
 
 @app.get("/rooms/edit/{room_id}", response_class=HTMLResponse)
 async def render_room_edit_page(request: Request, room_id: str):
     uid = request.cookies.get('uid')
+    id_token = request.cookies.get('token')
+
+    if not id_token:
+        return RedirectResponse(url="/login")
 
     if not uid:
         raise HTTPException(status_code=401, detail="User not authenticated")
@@ -193,6 +221,11 @@ async def delete_room(request: Request,room_id: str):
 @app.get("/booking",response_class=HTMLResponse)
 async def booking_read_root(request:Request):
     uid =request.cookies.get('uid')
+    id_token = request.cookies.get('token')
+
+    if not id_token:
+        return RedirectResponse(url="/login")
+    
     rooms_ref = db.collection("rooms")
     query = rooms_ref.where("createdBy", "==", uid)
     query_result = query.get()
@@ -353,6 +386,10 @@ async def add_booking(request:Request,booking:Booking):
 async def get_edit_booking_page(request:Request,booking_id: str):
     try:
         uid =request.cookies.get('uid')
+        id_token = request.cookies.get('token')
+
+        if not id_token:
+             return RedirectResponse(url="/login")
         rooms_ref = db.collection("rooms")
         query = rooms_ref.where("createdBy", "==", uid)
         query_result = query.get()

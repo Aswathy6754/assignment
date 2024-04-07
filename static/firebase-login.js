@@ -89,10 +89,31 @@ window.addEventListener('load', function () {
   if (signOutButton) {
 
     document.getElementById('sign-out').addEventListener('click', () => {
-      signOut(auth).then((output) => {
-        document.cookie = ';path=/;Samesite=Strict';
-        window.location = '/login'
+      document.cookie = 'token' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = 'email' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "uid" + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location='/'
+      signOut(auth).then(( res) => {
+      }).catch(()=>{
       })
+
+      const apiUrl = `http://127.0.0.1:8000/logout`;
+      const requestOptions = {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        },
+      };
+
+      fetch(apiUrl, requestOptions)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Failed Logout");
+          }
+        })
+        .catch(error => {
+          console.error("Error logout:", error);
+        });
     })
   }
 
