@@ -37,8 +37,7 @@ window.addEventListener('load', function () {
     document.getElementById('sign-up').addEventListener('click', () => {
       const email = document.getElementById('email').value
       const password = document.getElementById('password').value
-      let errorMessage = document.getElementById('error-message')
-      let successMessage = document.getElementById('success-message')
+      
 
 
       console.log(email, password)
@@ -48,9 +47,7 @@ window.addEventListener('load', function () {
           const email = user.email
           const uid = user.uid
           user.getIdToken().then((token) => {
-            errorMessage.innerText= ""
-            successMessage.innerText ='Successfully Signup'
-
+           
             document.cookie = "token=" + token + ';path=/;Samesite=Strict';
             document.cookie = "email=" + email + ';path=/;Samesite=Strict';
             document.cookie = "uid=" + uid + ';path=/;Samesite=Strict';
@@ -59,9 +56,7 @@ window.addEventListener('load', function () {
         })
         .catch((error) => {
           console.log(error.code + error.message)
-          errorMessage.innerText= error.message
-          successMessage.innerText =""
-
+         
         })
     })
   } 
@@ -73,9 +68,7 @@ window.addEventListener('load', function () {
     document.getElementById('login').addEventListener('click', () => {
       const email = document.getElementById('email').value
       const password = document.getElementById('password').value
-      let errorMessage = document.getElementById('error-message')
-      let successMessage = document.getElementById('success-message')
-
+    
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
@@ -83,9 +76,7 @@ window.addEventListener('load', function () {
           const uid = user.uid
 
           user.getIdToken().then((token) => {
-            errorMessage.innerText= ""
-            successMessage.innerText ='Successfully Logged-in'
-
+        
             document.cookie = "token=" + token + ';path=/;Samesite=Strict';
             document.cookie = "email=" + email + ';path=/;Samesite=Strict';
             document.cookie = "uid=" + uid + ';path=/;Samesite=Strict';
@@ -95,9 +86,7 @@ window.addEventListener('load', function () {
         })
         .catch((error) => {
           console.log(error.code + error.message)
-          errorMessage.innerText= error.message
-          successMessage.innerText =""
-
+         
         })
     })
   }

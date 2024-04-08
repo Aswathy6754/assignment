@@ -280,9 +280,11 @@ def find_element_by_date(array: List[dict], date: Any) -> dict:
         raise e
 
 
-def is_booking_overlapping(bookings: List[Dict[str, str]], new_time_from: str, new_time_to: str) -> bool:
-  
+def is_booking_overlapping(bookings: List[Dict[str, str]], new_time_from: str, new_time_to: str) -> bool:   
+
     try:
+        print("bookings")
+        print(bookings)
         # Convert time strings to datetime objects for comparison
         new_start_time = datetime.strptime(new_time_from, "%H:%M")
         new_end_time = datetime.strptime(new_time_to, "%H:%M")
