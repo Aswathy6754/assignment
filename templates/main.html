@@ -85,19 +85,19 @@
     }
 
     .card {
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-            transition: 0.3s;
-            width: 300px;
-            margin: 20px;
-            display: inline-block;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-            padding: 20px;
-        }
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      transition: 0.3s;
+      width: 300px;
+      margin: 20px;
+      display: inline-block;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      padding: 20px;
+    }
 
-        .card:hover {
-            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
-        }
+    .card:hover {
+      box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    }
   </style>
   <script type="module" src="{{ url_for('static', path='firebase-login.js') }}"></script>
 </head>
@@ -108,7 +108,8 @@
     <ul class="navbar-nav">
       <li class="nav-item"><a href="/rooms" class="nav-link">Rooms</a></li>
       <li class="nav-item"><a href="/booking" class="nav-link">Booking</a></li>
-      <li class="nav-item"><button class="nav-link" id="sign-out" style="background-color: #ddd;color: #007bff;">Log Out</button>
+      <li class="nav-item"><button class="nav-link" id="sign-out" style="background-color: #ddd;color: #007bff;">Log
+          Out</button>
       </li>
     </ul>
   </nav>
@@ -142,7 +143,7 @@
               <a href="/rooms/edit/{{room.id}}">
                 <button class="edit-button">Edit</button>
               </a>
-             
+
               <button id="delete-button" onclick="deleteRoom('{{room.id}}')">Delete</button>
             </td>
           </tr>
@@ -166,33 +167,63 @@
         {% for booking in all_bookings %}
         <div class="card">
           <div class="">
-              <h4><b>Booking ID:  {{booking.id}}</b></h4>
-              <p>Date: {{booking.date}}</p>
-              <p>Start Time: {{booking.time_from}}</p>
-              <p>End Time: {{booking.time_to}}</p>
-              <p>Room:{{booking.room_details.title}}</p>
-              <!-- Add additional booking details as needed -->
-              <div>
-                <a href="/bookings/edit/{{booking.id}}">
-                  <button class="edit-button">Edit</button>
-                </a>
-               
-                <button id="delete-button" onclick="deleteBooking('{{booking.id}}')">Delete</button>
-              </div>
+            <h4><b>Booking ID: {{booking.id}}</b></h4>
+            <p>Date: {{booking.date}}</p>
+            <p>Start Time: {{booking.time_from}}</p>
+            <p>End Time: {{booking.time_to}}</p>
+            <p>Room:{{booking.room_details.title}}</p>
+            <!-- Add additional booking details as needed -->
+            <div>
+              <a href="/bookings/edit/{{booking.id}}">
+                <button class="edit-button">Edit</button>
+              </a>
+
+              <button id="delete-button" onclick="deleteBooking('{{booking.id}}')">Delete</button>
+            </div>
           </div>
-      </div>
+        </div>
         {% endfor %}
       </div>
       {% endif %}
     </div>
   </div>
 
-  
+
 
   <!-- Example bookings (replace with dynamic data from backend) -->
-  
+
 
   <script>
+
+
+    window.addEventListener('load', function () {
+
+      function getDataCookie(cookieName) {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          cookie = cookie.trim();
+          if (cookie.startsWith(cookieName + '=')) {
+            const token = cookie.substring(cookieName.length + 1);
+            return token;
+          }
+        }
+        return null;
+      }
+
+      function decodeJWT(string){
+        var arr = string.split('.');
+         return { header: JSON.parse(atob(arr[0])), payload: JSON.parse(atob(arr[1])), secret: arr[2] }
+      }
+
+      const token = getDataCookie('token');
+
+      if (token) {
+        const userCredentials = decodeJWT(token)
+        document.cookie = "email=" + userCredentials.payload.email + ';path=/;Samesite=Strict';
+        document.cookie = "uid=" + userCredentials.payload.user_id + ';path=/;Samesite=Strict';
+      }
+    })
+
 
 
     function deleteRoom(id) {
@@ -238,8 +269,8 @@
     }
 
   </script>
- 
+
+
 </body>
 
 </html>
-

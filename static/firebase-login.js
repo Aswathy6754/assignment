@@ -29,7 +29,7 @@ window.addEventListener('load', function () {
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app)
-  // updateUI(document.cookie)
+// updateUI(document.cookie)
 
   let signUpButton = document.getElementById('sign-up')
 
@@ -38,19 +38,11 @@ window.addEventListener('load', function () {
       const email = document.getElementById('email').value
       const password = document.getElementById('password').value
       
-
-
-      console.log(email, password)
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-          const email = user.email
-          const uid = user.uid
           user.getIdToken().then((token) => {
-           
             document.cookie = "token=" + token + ';path=/;Samesite=Strict';
-            document.cookie = "email=" + email + ';path=/;Samesite=Strict';
-            document.cookie = "uid=" + uid + ';path=/;Samesite=Strict';
             window.location = '/'
           })
         })
@@ -72,15 +64,8 @@ window.addEventListener('load', function () {
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-          const email = user.email
-          const uid = user.uid
-
           user.getIdToken().then((token) => {
-        
             document.cookie = "token=" + token + ';path=/;Samesite=Strict';
-            document.cookie = "email=" + email + ';path=/;Samesite=Strict';
-            document.cookie = "uid=" + uid + ';path=/;Samesite=Strict';
-
             window.location = '/'
           })
         })
@@ -97,8 +82,6 @@ window.addEventListener('load', function () {
 
     document.getElementById('sign-out').addEventListener('click', () => {
       document.cookie = 'token' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = 'email' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "uid" + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       window.location='/'
       signOut(auth).then(( res) => {
       }).catch(()=>{
