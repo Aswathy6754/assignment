@@ -57,7 +57,7 @@ async def logout(response: Response):
 
 
 @app.get("/",response_class=HTMLResponse)
-async def read_root(request:Request): 
+async def read_root(request:Request,room: str = None, date: str = None): 
 
     id_token = request.cookies.get('token')
 
@@ -77,7 +77,7 @@ async def read_root(request:Request):
         room_with_id = {"id": room_id, **room_data}
         rooms_with_id.append(room_with_id)
 
-    bookings_ref = db.collection("bookings").where("createdBy", "==", uid).stream()
+    bookings_ref = db.collection("bookings").stream()
         
         # Initialize a list to store booking data along with their IDs
     all_bookings = []
@@ -88,24 +88,47 @@ async def read_root(request:Request):
         booking_data["id"] = booking_doc.id
         all_bookings.append(booking_data)
     
+    resultBooking=[]
+    resultBooking=all_bookings
+
+
+    if room:
+        roomfilter =[]
+        for booking in resultBooking:
+            if booking.get('room') == room :
+                roomfilter.append(booking)
+        
+
+        resultBooking = roomfilter
+
+    if date:
+        datefilter =[]
+        for booking in resultBooking:
+            if booking.get('date') == date :
+                datefilter.append(booking)
+        
+
+        resultBooking = datefilter  
+
     all_bookings_with_room =[]
 
-    for booking in all_bookings:
-        room = booking.get("room")
-        
-        print(room)
-        room_ref  = db.collection("rooms").document(room)
+    for booking in resultBooking:
+        roomdata = booking.get("room")
+        room_ref  = db.collection("rooms").document(roomdata)
         booking['room_details'] =  room_ref.get().to_dict()
         all_bookings_with_room.append(booking)
-
-
+    
+    
+    resultBooking=[]
+    resultBooking = all_bookings_with_room
+   
     if id_token:
         try:
             user_token =google.oauth2.id_token.verify_firebase_token(id_token,firebase_request_adapter)
         except ValueError as err:
             print(str(err))
 
-    return templates.TemplateResponse('main.html',{'request' : request, 'user_token':user_token,"all_rooms":rooms_with_id,'all_bookings':all_bookings_with_room,'error_message':error_message})
+    return templates.TemplateResponse('main.html',{'request' : request, 'user_token':user_token,"all_rooms":rooms_with_id,'all_bookings':resultBooking,'error_message':error_message})
 
 
 class Room(BaseModel):
@@ -226,15 +249,13 @@ async def delete_room(request: Request,room_id: str):
 
 @app.get("/booking",response_class=HTMLResponse)
 async def booking_read_root(request:Request):
-    uid =request.cookies.get('uid')
     id_token = request.cookies.get('token')
 
     if not id_token:
         return RedirectResponse(url="/login")
     
     rooms_ref = db.collection("rooms")
-    query = rooms_ref.where("createdBy", "==", uid)
-    query_result = query.get()
+    query_result = rooms_ref.stream()
     rooms_with_id = []
     for doc in query_result:
         room_id = doc.id
@@ -573,3 +594,33 @@ async def delete_booking(booking_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/viewbookings/{room}", response_class=HTMLResponse)
+async def viewBooking(request:Request,room: str):
+    try:
+        uid =request.cookies.get('uid')
+        id_token = request.cookies.get('token')
+
+        if not id_token:
+             return RedirectResponse(url="/login")
+        
+        room_ref  = db.collection("rooms").document(room)
+        room_details =  room_ref.get().to_dict()
+
+        booking_ref = db.collection("bookings")
+        query = booking_ref.where("room", "==", room)
+        query_result = query.get()
+        bookings_with_id = []
+        for doc in query_result:
+            booking_id = doc.id
+            booking_data = doc.to_dict()
+            
+            booking_with_id = {"id": booking_id,"createdBy":uid,"room_details":room_details, **booking_data}
+            bookings_with_id.append(booking_with_id)
+        # Retrieve booking data from Firestore
+       
+        return templates.TemplateResponse("viewBooking.html", {"request": request,"bookings":bookings_with_id, })
+
+    
+    except Exception as e:
+        # Handle errors
+        raise HTTPException(status_code=500, detail=str(e))
