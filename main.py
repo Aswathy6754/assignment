@@ -1,4 +1,5 @@
 
+
 from fastapi import FastAPI, Request,HTTPException
 from fastapi.responses import HTMLResponse,Response
 from fastapi.responses import RedirectResponse
@@ -21,16 +22,19 @@ db = firestore.client()
 
 
 
+
 app.mount('/static',StaticFiles(directory='static'), name='static')
 templates = Jinja2Templates(directory='templates')
 
 
 @app.get("/signup",response_class=HTMLResponse)
 async def signup_read_root(request:Request):
+
     id_token = request.cookies.get('token')
 
     if id_token:
         return RedirectResponse(url="/")
+
     return templates.TemplateResponse('signup.html',{'request' : request,})
 
 
@@ -50,6 +54,7 @@ async def logout(response: Response):
 
     response = RedirectResponse(url="/login")
     return response
+
 
 @app.get("/",response_class=HTMLResponse)
 async def read_root(request:Request): 
@@ -92,6 +97,7 @@ async def read_root(request:Request):
         room_ref  = db.collection("rooms").document(room)
         booking['room_details'] =  room_ref.get().to_dict()
         all_bookings_with_room.append(booking)
+
 
     if id_token:
         try:
@@ -566,3 +572,4 @@ async def delete_booking(booking_id: str):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

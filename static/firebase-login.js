@@ -39,6 +39,7 @@ window.addEventListener('load', function () {
       const password = document.getElementById('password').value
       
 
+
       console.log(email, password)
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
@@ -120,6 +121,7 @@ window.addEventListener('load', function () {
         .catch(error => {
           console.error("Error logout:", error);
         });
+
     })
   }
 
