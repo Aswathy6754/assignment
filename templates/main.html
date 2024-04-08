@@ -143,6 +143,9 @@
               <a href="/rooms/edit/{{room.id}}">
                 <button class="edit-button">Edit</button>
               </a>
+              <a href="/viewbookings/{{room.id}}">
+                <button class="edit-button">view bookings</button>
+              </a>
 
               <button id="delete-button" onclick="deleteRoom('{{room.id}}')">Delete</button>
             </td>
@@ -157,6 +160,18 @@
   <div class="container">
     <div class="header">
       <h1>Booking Management</h1>
+      <div>
+        <select id="roomSelect" name="room_id"  required>
+          <option value="">Select Room</option>
+          {% for room in all_rooms %}
+          <option value="{{ room.id }}">{{ room.title }}</option>
+          {% endfor %}
+      </select>
+      <input type="date" id="dateInput" name="date"  value="" required>
+      <button class="add-room-button" onclick="filterPage()">Filter</button>
+
+
+      </div>
       <a href="/booking">
         <button class="add-room-button">Add Booking</button>
       </a>
@@ -224,8 +239,6 @@
       }
     })
 
-
-
     function deleteRoom(id) {
       const apiUrl = `http://127.0.0.1:8000/rooms/delete/${id}`;
       const requestOptions = {
@@ -266,6 +279,29 @@
         .catch(error => {
           console.error("Error deleteing room:", error);
         });
+    }
+
+    function filterPage() {
+        var roomValue = document.getElementById("roomSelect").value;
+        var dateValue = document.getElementById("dateInput").value;
+
+        // Construct the new URL with updated query parameters
+        var url = window.location.origin + window.location.pathname; // Get current URL without query parameters
+        var queryParams = new URLSearchParams(window.location.search);
+        if (roomValue) {
+            queryParams.set("room", roomValue);
+        } else {
+            queryParams.delete("room");
+        }
+        if (dateValue) {
+            queryParams.set("date", dateValue);
+        } else {
+            queryParams.delete("date");
+        }
+        var newUrl = url + "?" + queryParams.toString();
+
+        // Reload the page with the new URL
+        window.location.href = newUrl;
     }
 
   </script>
