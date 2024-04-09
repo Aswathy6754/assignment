@@ -60,6 +60,11 @@ async def logout(response: Response):
 async def read_root(request:Request,room: str = None, date: str = None): 
     id_token = request.cookies.get('token')
 
+    is_filter = False 
+    if room or date:
+        is_filter= True
+
+
     if not id_token:
         return RedirectResponse(url="/login")
 
@@ -67,6 +72,7 @@ async def read_root(request:Request,room: str = None, date: str = None):
     error_message = 'No Error Here'
     user_token = None
     query_result = db.collection("rooms").stream()
+
         
         # Initialize a list to store booking data along with their IDs
     all_bookings = []
@@ -77,8 +83,12 @@ async def read_root(request:Request,room: str = None, date: str = None):
         room_with_id = {"id": room_id, **room_data}
         rooms_with_id.append(room_with_id)
 
-    bookings_ref = db.collection("bookings").stream()
-        
+    bookings_ref 
+    if is_filter:
+        bookings_ref = db.collection("bookings").stream()
+    else:
+        bookings_ref = db.collection("bookings").where("createdBy", "==", uid).stream()
+
         # Initialize a list to store booking data along with their IDs
     all_bookings = []
         
@@ -128,7 +138,7 @@ async def read_root(request:Request,room: str = None, date: str = None):
         except ValueError as err:
             print(str(err))
 
-    return templates.TemplateResponse('main.html',{'request' : request, 'user_token':user_token,"all_rooms":rooms_with_id,'all_bookings':resultBooking,"uid":uid,'error_message':error_message})
+    return templates.TemplateResponse('main.html',{'request' : request, 'user_token':user_token,"all_rooms":rooms_with_id,'all_bookings':resultBooking,"uid":uid,'error_message':error_message,'is_filter':is_filter})
 
 
 class Room(BaseModel):

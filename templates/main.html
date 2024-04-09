@@ -191,6 +191,8 @@
             <p>End Time: {{booking.time_to}}</p>
             <p>Room:{{booking.room_details.title}}</p>
             <!-- Add additional booking details as needed -->
+
+            {% if is_filter == False %}
             <div>
               <a href="/bookings/edit/{{booking.id}}">
                 <button class="edit-button">Edit</button>
@@ -198,6 +200,7 @@
 
               <button id="delete-button" onclick="deleteBooking('{{booking.id}}')">Delete</button>
             </div>
+            {% endif  %}
           </div>
         </div>
         {% endfor %}
@@ -260,7 +263,7 @@
           if (!response.ok) {
             throw new Error("Failed to delete room");
           }
-          // window.location = '/'
+          window.location = '/'
         })
         .catch(error => {
           console.error("Error deleteing room:", error);
