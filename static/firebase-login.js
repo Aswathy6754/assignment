@@ -31,82 +31,72 @@ window.addEventListener('load', function () {
   const auth = getAuth(app)
 // updateUI(document.cookie)
 
-  let signUpButton = document.getElementById('sign-up')
 
-  if (signUpButton) {
-    document.getElementById('sign-up').addEventListener('click', () => {
-      const email = document.getElementById('email').value
-      const password = document.getElementById('password').value
-      
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          user.getIdToken().then((token) => {
-            document.cookie = "token=" + token + ';path=/;Samesite=Strict';
-            window.location = '/'
-          })
-        })
-        .catch((error) => {
-          console.log(error.code + error.message)
-         
-        })
-    })
-  } 
-
-
-  let loginButton = document.getElementById('login')
-
-  if (loginButton) {
-    document.getElementById('login').addEventListener('click', () => {
-      const email = document.getElementById('email').value
-      const password = document.getElementById('password').value
+  document.getElementById('sign-up').addEventListener('click', () => {
+    const email = document.getElementById('email').value
+    const password = document.getElementById('password').value
     
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          user.getIdToken().then((token) => {
-            document.cookie = "token=" + token + ';path=/;Samesite=Strict';
-            window.location = '/'
-          })
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        user.getIdToken().then((token) => {
+          document.cookie = "token=" + token + ';path=/;Samesite=Strict';
+          window.location = '/'
         })
-        .catch((error) => {
-          console.log(error.code + error.message)
-         
-        })
-    })
-  }
-
-
-  let signOutButton = document.getElementById('sign-out')
-  if (signOutButton) {
-
-    document.getElementById('sign-out').addEventListener('click', () => {
-      document.cookie = 'token' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      window.location='/'
-      signOut(auth).then(( res) => {
-      }).catch(()=>{
       })
+      .catch((error) => {
+        console.log(error.code + error.message)
+       
+      })
+  })
+  
 
-      const apiUrl = `http://127.0.0.1:8000/logout`;
-      const requestOptions = {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        },
-      };
 
-      fetch(apiUrl, requestOptions)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Failed Logout");
-          }
+  document.getElementById('login').addEventListener('click', () => {
+    const email = document.getElementById('email').value
+    const password = document.getElementById('password').value
+  
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        user.getIdToken().then((token) => {
+          document.cookie = "token=" + token + ';path=/;Samesite=Strict';
+          window.location = '/'
         })
-        .catch(error => {
-          console.error("Error logout:", error);
-        });
+      })
+      .catch((error) => {
+        console.log(error.code + error.message)
+       
+      })
+  })
+  
 
+  document.getElementById('sign-out').addEventListener('click', () => {
+    document.cookie = 'token' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    window.location='/'
+    signOut(auth).then(( res) => {
+    }).catch(()=>{
     })
-  }
+
+    const apiUrl = `http://127.0.0.1:8000/logout`;
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      },
+    };
+
+    fetch(apiUrl, requestOptions)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Failed Logout");
+        }
+      })
+      .catch(error => {
+        console.error("Error logout:", error);
+      });
+
+  })
 
 })
 
