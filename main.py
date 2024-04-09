@@ -67,9 +67,10 @@ async def read_root(request:Request,room: str = None, date: str = None):
     uid = request.cookies.get('uid')
     error_message = 'No Error Here'
     user_token = None
-    rooms_ref = db.collection("rooms")
-    query = rooms_ref.where("createdBy", "==", uid)
-    query_result = query.get()
+    query_result = db.collection("rooms").stream()
+        
+        # Initialize a list to store booking data along with their IDs
+    all_bookings = []
     rooms_with_id = []
     for doc in query_result:
         room_id = doc.id
