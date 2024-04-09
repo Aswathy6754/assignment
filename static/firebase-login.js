@@ -29,7 +29,7 @@ window.addEventListener('load', function () {
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app)
-// updateUI(document.cookie)
+  updateUI(document.cookie)
 
 
   document.getElementById('sign-up').addEventListener('click', () => {
@@ -50,8 +50,6 @@ window.addEventListener('load', function () {
       })
   })
   
-
-
   document.getElementById('login').addEventListener('click', () => {
     const email = document.getElementById('email').value
     const password = document.getElementById('password').value
@@ -70,36 +68,29 @@ window.addEventListener('load', function () {
       })
   })
   
-
   document.getElementById('sign-out').addEventListener('click', () => {
-    document.cookie = 'token' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    window.location='/'
     signOut(auth).then(( res) => {
-    }).catch(()=>{
+      document.cookie = 'token' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location='/'
+    }).catch((error)=>{
+      console.log(error)
     })
-
-    const apiUrl = `http://127.0.0.1:8000/logout`;
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      },
-    };
-
-    fetch(apiUrl, requestOptions)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Failed Logout");
-        }
-      })
-      .catch(error => {
-        console.error("Error logout:", error);
-      });
-
   })
 
 })
 
+
+function updateUI(cookie){
+  var token = parseCookieToken(cookie)
+
+  if(token.length >0){
+    document.getElementById('login-box').hidden =true
+    document.getElementById('sign-out').hidden =false
+  }else{
+    document.getElementById('login-box').hidden =false
+    document.getElementById('sign-out').hidden =true
+  }
+}
 
 
 function parseCookieToken(token) {
