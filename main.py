@@ -58,7 +58,6 @@ async def logout(response: Response):
 
 @app.get("/",response_class=HTMLResponse)
 async def read_root(request:Request,room: str = None, date: str = None): 
-
     id_token = request.cookies.get('token')
 
     if not id_token:
@@ -129,7 +128,7 @@ async def read_root(request:Request,room: str = None, date: str = None):
         except ValueError as err:
             print(str(err))
 
-    return templates.TemplateResponse('main.html',{'request' : request, 'user_token':user_token,"all_rooms":rooms_with_id,'all_bookings':resultBooking,'error_message':error_message})
+    return templates.TemplateResponse('main.html',{'request' : request, 'user_token':user_token,"all_rooms":rooms_with_id,'all_bookings':resultBooking,"uid":uid,'error_message':error_message})
 
 
 class Room(BaseModel):
@@ -346,6 +345,7 @@ async def add_booking(request:Request,booking:Booking):
                 return {"message": "Booking added successfully"}
         
         else:
+            print('elese 348')
             days_query = db.collection("days").where(f"__name__", "in", room_data["days"])
             days_docs = days_query.stream()
             documents = []
@@ -353,10 +353,12 @@ async def add_booking(request:Request,booking:Booking):
                 elem =doc.to_dict()
                 elem['id']=doc.id
                 documents.append((elem))
-
+            print(documents)
             matching_date_elements = find_element_by_date(documents,booking.date)
-            match_date_id = matching_date_elements['id']
+            print('if 360')
             if matching_date_elements:
+                match_date_id = matching_date_elements['id']
+
                 if not matching_date_elements["bookings"]:
                     booking_id = create_booking_document(booking.room, booking.date, booking.time_from, booking.time_to,uid)
                     day_data = {
@@ -392,6 +394,7 @@ async def add_booking(request:Request,booking:Booking):
                         print('date updated')
   
             else:
+                print('elese 395')
                 booking_id = create_booking_document(booking.room, booking.date, booking.time_from, booking.time_to,uid)
                 day_data = {
                     "day": booking.date,

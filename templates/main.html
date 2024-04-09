@@ -140,14 +140,17 @@
             <td>{{ room.description }}</td>
             <td>{{ room.createdByEmail }}</td>
             <td class="room-actions">
-              <a href="/rooms/edit/{{room.id}}">
-                <button class="edit-button">Edit</button>
-              </a>
               <a href="/viewbookings/{{room.id}}">
                 <button class="edit-button">view bookings</button>
               </a>
 
+              {% if uid == room.createdBy %}
+              <a href="/rooms/edit/{{room.id}}">
+                <button class="edit-button">Edit</button>
+              </a>
+
               <button id="delete-button" onclick="deleteRoom('{{room.id}}')">Delete</button>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
