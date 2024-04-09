@@ -140,14 +140,17 @@
             <td>{{ room.description }}</td>
             <td>{{ room.createdByEmail }}</td>
             <td class="room-actions">
-              <a href="/rooms/edit/{{room.id}}">
-                <button class="edit-button">Edit</button>
-              </a>
               <a href="/viewbookings/{{room.id}}">
                 <button class="edit-button">view bookings</button>
               </a>
 
+              {% if uid == room.createdBy %}
+              <a href="/rooms/edit/{{room.id}}">
+                <button class="edit-button">Edit</button>
+              </a>
+
               <button id="delete-button" onclick="deleteRoom('{{room.id}}')">Delete</button>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -188,6 +191,8 @@
             <p>End Time: {{booking.time_to}}</p>
             <p>Room:{{booking.room_details.title}}</p>
             <!-- Add additional booking details as needed -->
+
+            {% if is_filter == False %}
             <div>
               <a href="/bookings/edit/{{booking.id}}">
                 <button class="edit-button">Edit</button>
@@ -195,12 +200,17 @@
 
               <button id="delete-button" onclick="deleteBooking('{{booking.id}}')">Delete</button>
             </div>
+            {% endif  %}
           </div>
         </div>
         {% endfor %}
       </div>
       {% endif %}
     </div>
+    <button type="submit" class="btn-login" id="login" hidden></button>
+    <button type="submit" class="btn-login" id="sign-up"  hidden ></button>
+    <div id="login-box"></div>
+
   </div>
 
 

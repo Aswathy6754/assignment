@@ -10,7 +10,7 @@ from google.auth.transport import requests
 import firebase_admin
 from firebase_admin import credentials, firestore
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime,timedelta
 from typing import Any, List,Dict
 
 app = FastAPI()
@@ -58,8 +58,12 @@ async def logout(response: Response):
 
 @app.get("/",response_class=HTMLResponse)
 async def read_root(request:Request,room: str = None, date: str = None): 
-
     id_token = request.cookies.get('token')
+
+    is_filter = False 
+    if room or date:
+        is_filter= True
+
 
     if not id_token:
         return RedirectResponse(url="/login")
@@ -68,6 +72,7 @@ async def read_root(request:Request,room: str = None, date: str = None):
     error_message = 'No Error Here'
     user_token = None
     query_result = db.collection("rooms").stream()
+
         
         # Initialize a list to store booking data along with their IDs
     all_bookings = []
@@ -78,8 +83,13 @@ async def read_root(request:Request,room: str = None, date: str = None):
         room_with_id = {"id": room_id, **room_data}
         rooms_with_id.append(room_with_id)
 
-    bookings_ref = db.collection("bookings").stream()
-        
+     
+
+    if is_filter:
+        bookings_ref = db.collection("bookings").stream()
+    else:
+        bookings_ref = db.collection("bookings").where("createdBy", "==", uid).stream()
+
         # Initialize a list to store booking data along with their IDs
     all_bookings = []
         
@@ -129,7 +139,7 @@ async def read_root(request:Request,room: str = None, date: str = None):
         except ValueError as err:
             print(str(err))
 
-    return templates.TemplateResponse('main.html',{'request' : request, 'user_token':user_token,"all_rooms":rooms_with_id,'all_bookings':resultBooking,'error_message':error_message})
+    return templates.TemplateResponse('main.html',{'request' : request, 'user_token':user_token,"all_rooms":rooms_with_id,'all_bookings':resultBooking,"uid":uid,'error_message':error_message,'is_filter':is_filter})
 
 
 class Room(BaseModel):
@@ -221,31 +231,70 @@ async def edit_room(request: Request,room_id: str, updated_room: Room):
 
     return {"message": "Room updated successfully"}
 
-@app.delete("/rooms/delete/{room_id}")
-async def delete_room(request: Request,room_id: str):
-    uid = request.cookies.get('uid')
-    if not uid:
-        raise HTTPException(status_code=401, detail="User not authenticated")
 
-    # Retrieve the room document from Firestore
-    room_ref = db.collection("rooms").document(room_id)
-    room_doc = room_ref.get()
+def is_today(date_str):
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    today = datetime.now().date()
+    return date_obj == today
 
-    # Check if the room exists
+# Function to check if a given date is tomorrow
+def is_tomorrow(date_str):
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    tomorrow = datetime.now().date() + timedelta(days=1)
+    return date_obj == tomorrow
+
+# Function to delete a room and its associated documents
+    # Check if room exists
+def delete_room_and_associated_data(room_id):
+    rooms_ref = db.collection("rooms")
+    bookings_ref = db.collection("bookings")
+    days_ref = db.collection("days")
+    # Check if room exists
+    room_doc = rooms_ref.document(room_id).get()
     if not room_doc.exists:
         raise HTTPException(status_code=404, detail="Room not found")
 
-    # Extract room data
+    # Check if room has any associated days
     room_data = room_doc.to_dict()
+    if not room_data["days"]:
+        # Delete the room document if there are no associated days
+        rooms_ref.document(room_id).delete()
+        return
 
-    # Check if the authenticated user is the creator of the room
-    if room_data["createdBy"] != uid:
-        raise HTTPException(status_code=403, detail="You are not authorized to delete this room")
+    # Check if any associated day is today or later
+    for day_id in room_data["days"]:
+        day_doc = days_ref.document(day_id).get()
+        if day_doc.exists:
+            day_data = day_doc.to_dict()
+            day_obj = datetime.strptime(day_data["day"], "%Y-%m-%d").date()
+            if day_obj >= datetime.now().date():
+                # Check if any bookings exist for the day
+                for booking_id in day_data["bookings"]:
+                    booking_doc = bookings_ref.document(booking_id).get()
+                    if booking_doc.exists:
+                        booking_data = booking_doc.to_dict()
+                        if datetime.strptime(booking_data["date"], "%Y-%m-%d").date() == datetime.now().date() and datetime.strptime(booking_data["time_to"], "%H:%M").time() > datetime.now().time():
+                            # Booking exists for today and has not ended yet, cannot delete room
+                            raise HTTPException(status_code=400, detail="Cannot delete room with active booking")
+                        elif datetime.strptime(booking_data["date"], "%Y-%m-%d").date() > datetime.now().date():
+                            # Booking exists for a future date, cannot delete room
+                            raise HTTPException(status_code=400, detail="Cannot delete room with future bookings")
 
-    # Delete the room document from Firestore
-    room_ref.delete()
+            # Delete the day document
+            days_ref.document(day_id).delete()
 
-    return {"message": "Room deleted successfully"}
+    # Delete the room document
+    rooms_ref.document(room_id).delete()
+# API endpoint to delete a room
+@app.delete("/rooms/delete/{room_id}")
+async def delete_room(room_id: str):
+    try:
+        delete_room_and_associated_data(room_id)
+        return {"message": "Room deleted successfully"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/booking",response_class=HTMLResponse)
@@ -346,6 +395,7 @@ async def add_booking(request:Request,booking:Booking):
                 return {"message": "Booking added successfully"}
         
         else:
+            print('elese 348')
             days_query = db.collection("days").where(f"__name__", "in", room_data["days"])
             days_docs = days_query.stream()
             documents = []
@@ -353,10 +403,12 @@ async def add_booking(request:Request,booking:Booking):
                 elem =doc.to_dict()
                 elem['id']=doc.id
                 documents.append((elem))
-
+            print(documents)
             matching_date_elements = find_element_by_date(documents,booking.date)
-            match_date_id = matching_date_elements['id']
+            print('if 360')
             if matching_date_elements:
+                match_date_id = matching_date_elements['id']
+
                 if not matching_date_elements["bookings"]:
                     booking_id = create_booking_document(booking.room, booking.date, booking.time_from, booking.time_to,uid)
                     day_data = {
@@ -392,6 +444,7 @@ async def add_booking(request:Request,booking:Booking):
                         print('date updated')
   
             else:
+                print('elese 395')
                 booking_id = create_booking_document(booking.room, booking.date, booking.time_from, booking.time_to,uid)
                 day_data = {
                     "day": booking.date,
