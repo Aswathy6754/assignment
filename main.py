@@ -7,8 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import google.oauth2.id_token
 from google.auth.transport import requests
-import firebase_admin
-from firebase_admin import credentials, firestore
+from google.cloud import firestore 
 from pydantic import BaseModel
 from datetime import datetime,timedelta
 from typing import Any, List,Dict
@@ -16,9 +15,8 @@ from typing import Any, List,Dict
 app = FastAPI()
  
 firebase_request_adapter = requests.Request()
-cred = credentials.Certificate("./firebaseConfig.json")  
-firebase_admin.initialize_app(cred)
-db = firestore.client()
+
+db = firestore.Client()
 
 
 
