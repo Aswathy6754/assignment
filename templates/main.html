@@ -100,6 +100,8 @@
     }
   </style>
   <script type="module" src="{{ url_for('static', path='firebase-login.js') }}"></script>
+  <script type="module" src="{{ url_for('static', path='script.js') }}"></script>
+
 </head>
 
 <body>
@@ -213,7 +215,7 @@
     <button type="submit" class="btn-login" id="login" hidden></button>
     <button type="submit" class="btn-login" id="sign-up"  hidden ></button>
     <div id="login-box"></div>
-    <button class="nav-link" id="sign-out" style="background-color: #ddd;color: #007bff;" hidden >Log
+    <button class="nav-link" id="sign-out" style="background-color: #ddd;color: #007bff; visibility: hidden;" hidden >Log
       Out</button>
   </div>
 
@@ -222,13 +224,9 @@
   <!-- Example bookings (replace with dynamic data from backend) -->
 
 
-  <script type="module">
+  <script>
 
-    document.getElementById('sign-out-btn').addEventListener('click', () => {
-      document.cookie = 'token' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      window.location='/'
-  })
-
+    
     window.addEventListener('load', function () {
 
       function getDataCookie(cookieName) {
