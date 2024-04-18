@@ -108,9 +108,11 @@
     <ul class="navbar-nav">
       <li class="nav-item"><a href="/rooms" class="nav-link">Rooms</a></li>
       <li class="nav-item"><a href="/booking" class="nav-link">Booking</a></li>
-      <li class="nav-item"><button class="nav-link" id="sign-out" style="background-color: #ddd;color: #007bff;">Log
-          Out</button>
-      </li>
+        {% if user_token %}
+        <li class="nav-item"><button class="nav-link" id="sign-out-btn" style="background-color: #ddd;color: #007bff;">Log
+            Out</button>
+        </li>
+      {% endif %}
     </ul>
   </nav>
 
@@ -118,6 +120,7 @@
   <div class="container">
     <div class="header">
       <h1>Rooms</h1>
+
       <a href="/rooms">
         <button class="add-room-button">Add Room</button>
       </a>
@@ -210,7 +213,8 @@
     <button type="submit" class="btn-login" id="login" hidden></button>
     <button type="submit" class="btn-login" id="sign-up"  hidden ></button>
     <div id="login-box"></div>
-
+    <button class="nav-link" id="sign-out" style="background-color: #ddd;color: #007bff;" hidden >Log
+      Out</button>
   </div>
 
 
@@ -218,8 +222,12 @@
   <!-- Example bookings (replace with dynamic data from backend) -->
 
 
-  <script>
+  <script type="module">
 
+    document.getElementById('sign-out-btn').addEventListener('click', () => {
+      document.cookie = 'token' + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location='/'
+  })
 
     window.addEventListener('load', function () {
 
